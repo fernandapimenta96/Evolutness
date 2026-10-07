@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Todas as avaliações — Meu Acompanhamento Corporal</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Aplica o tema salvo (ou o do sistema) antes de desenhar a página, evitando "piscar".
+    (function () {
+      var tema = null;
+      try { tema = localStorage.getItem('tema'); } catch (e) {}
+      if (!tema && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) tema = 'dark';
+      document.documentElement.setAttribute('data-theme', tema === 'dark' ? 'dark' : 'light');
+    })();
+  </script>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-actions">
+      <span class="user-email" id="usuario-email"></span>
+      <button type="button" class="header-btn" id="btn-tema" aria-pressed="false">Tema escuro</button>
+      <button type="button" class="header-btn" id="btn-sair">Sair</button>
+    </div>
+    <div class="container">
+      <h1>Todas as avaliações</h1>
+      <p class="subtitle">Todas as avaliações que você já salvou, das mais recentes para as mais antigas.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <p class="notice" id="aviso" role="alert" hidden></p>
+    <div class="toolbar">
+      <a href="index.html" class="btn btn-primary">&larr; Nova avaliação</a>
+      <p class="status" id="contagem" aria-live="polite"></p>
+    </div>
+
+    <section id="vazio" class="card empty" hidden>
+      <h2>Nenhuma avaliação salva ainda</h2>
+      <p>Calcule uma avaliação e clique em “Salvar avaliação” para vê-la aqui.</p>
+    </section>
+
+    <section id="lista-avaliacoes" class="saved-list" aria-label="Avaliações salvas"></section>
+  </main>
+
+  <footer class="page-footer">
+    <p>Seus dados ficam salvos de forma privada na sua conta.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

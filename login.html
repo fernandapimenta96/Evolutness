@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar — Meu Acompanhamento Corporal</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Aplica o tema salvo (ou o do sistema) antes de desenhar a página, evitando "piscar".
+    (function () {
+      var tema = null;
+      try { tema = localStorage.getItem('tema'); } catch (e) {}
+      if (!tema && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) tema = 'dark';
+      document.documentElement.setAttribute('data-theme', tema === 'dark' ? 'dark' : 'light');
+    })();
+  </script>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-actions">
+      <button type="button" class="header-btn" id="btn-tema" aria-pressed="false">Tema escuro</button>
+    </div>
+    <div class="container">
+      <h1>Meu Acompanhamento Corporal</h1>
+      <p class="subtitle">Entre para acessar suas avaliações em qualquer dispositivo.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="card auth-card" aria-labelledby="titulo-auth">
+      <h2 id="titulo-auth">Entrar</h2>
+
+      <p class="notice" id="aviso-config" role="alert" hidden>
+        O banco de dados ainda não foi configurado. Preencha o arquivo <code>config.js</code> com os dados do seu projeto Supabase (veja o passo a passo no <code>LEIAME.md</code>).
+      </p>
+
+      <form id="form-login" novalidate>
+        <div class="field">
+          <label for="email">E-mail <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" id="email" name="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" placeholder="voce@exemplo.com" required aria-describedby="erro-email">
+          <p class="error" id="erro-email" role="alert"></p>
+        </div>
+
+        <div class="field">
+          <label for="senha">Senha <span class="req" aria-hidden="true">*</span></label>
+          <input type="password" id="senha" name="senha" autocomplete="current-password" required aria-describedby="erro-senha dica-senha">
+          <p class="hint-small" id="dica-senha" hidden>Use pelo menos 8 caracteres.</p>
+          <p class="error" id="erro-senha" role="alert"></p>
+        </div>
+
+        <div class="field" id="campo-confirmar" hidden>
+          <label for="confirmar">Confirmar senha <span class="req" aria-hidden="true">*</span></label>
+          <input type="password" id="confirmar" name="confirmar" autocomplete="new-password" aria-describedby="erro-confirmar">
+          <p class="error" id="erro-confirmar" role="alert"></p>
+        </div>
+
+        <p class="notice" id="aviso-form" role="alert" hidden></p>
+        <p class="notice notice-ok" id="aviso-ok" role="status" hidden></p>
+
+        <button type="submit" class="btn btn-primary btn-block" id="btn-enviar">Entrar</button>
+      </form>
+
+      <p class="auth-switch">
+        <span id="texto-troca">Ainda não tem conta?</span>
+        <button type="button" class="link-btn" id="btn-troca">Criar conta</button>
+      </p>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>Seus dados ficam salvos de forma privada na sua conta.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="script.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>

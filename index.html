@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meu Acompanhamento Corporal</title>
+  <meta name="description" content="Registre suas medidas e acompanhe sua evolução ao longo do tempo.">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Aplica o tema salvo (ou o do sistema) antes de desenhar a página, evitando "piscar".
+    (function () {
+      var tema = null;
+      try { tema = localStorage.getItem('tema'); } catch (e) {}
+      if (!tema && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) tema = 'dark';
+      document.documentElement.setAttribute('data-theme', tema === 'dark' ? 'dark' : 'light');
+    })();
+  </script>
+</head>
+<body>
+  <header class="page-header">
+    <div class="header-actions">
+      <span class="user-email" id="usuario-email"></span>
+      <button type="button" class="header-btn" id="btn-tema" aria-pressed="false">Tema escuro</button>
+      <button type="button" class="header-btn" id="btn-sair">Sair</button>
+    </div>
+    <div class="container">
+      <h1>Meu Acompanhamento Corporal</h1>
+      <p class="subtitle">Registre suas medidas e acompanhe sua evolução ao longo do tempo.</p>
+    </div>
+  </header>
+
+  <main class="container">
+    <p class="notice" id="aviso" role="alert" hidden></p>
+    <section id="migracao" class="card" aria-labelledby="titulo-migracao" hidden>
+      <h2 id="titulo-migracao">Importar avaliações deste navegador</h2>
+      <p id="migracao-texto"></p>
+      <div class="actions">
+        <button type="button" id="btn-importar" class="btn btn-primary">Importar para minha conta</button>
+        <button type="button" id="btn-dispensar" class="btn btn-secondary">Agora não</button>
+      </div>
+      <p class="status" id="migracao-status" role="status"></p>
+    </section>
+
+    <form id="form-avaliacao" class="card form-card" novalidate>
+      <p class="required-note"><span class="req" aria-hidden="true">*</span> Campos obrigatórios</p>
+
+      <fieldset class="section">
+        <legend><span class="step">1</span> Dados da avaliação</legend>
+        <div class="grid-3">
+          <div class="field">
+            <label for="data">Data <span class="req" aria-hidden="true">*</span></label>
+            <input type="date" id="data" name="data" required aria-describedby="erro-data">
+            <p class="error" id="erro-data" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="peso">Peso (kg) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="peso" name="peso" inputmode="decimal" autocomplete="off" placeholder="Ex.: 92,0" required aria-describedby="erro-peso">
+              <span class="unit" aria-hidden="true">kg</span>
+            </div>
+            <p class="error" id="erro-peso" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="altura">Altura (m) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="altura" name="altura" inputmode="decimal" autocomplete="off" placeholder="Ex.: 1,80" required aria-describedby="erro-altura">
+              <span class="unit" aria-hidden="true">m</span>
+            </div>
+            <p class="error" id="erro-altura" role="alert"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend><span class="step">2</span> Medidas corporais</legend>
+        <div class="grid-2">
+          <div class="field">
+            <label for="busto">Busto (cm) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="busto" name="busto" inputmode="decimal" autocomplete="off" placeholder="Ex.: 100" required aria-describedby="erro-busto">
+              <span class="unit" aria-hidden="true">cm</span>
+            </div>
+            <p class="error" id="erro-busto" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="cintura">Cintura (cm) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="cintura" name="cintura" inputmode="decimal" autocomplete="off" placeholder="Ex.: 92" required aria-describedby="erro-cintura">
+              <span class="unit" aria-hidden="true">cm</span>
+            </div>
+            <p class="error" id="erro-cintura" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="abdomen">Abdômen (cm) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="abdomen" name="abdomen" inputmode="decimal" autocomplete="off" placeholder="Ex.: 91" required aria-describedby="erro-abdomen">
+              <span class="unit" aria-hidden="true">cm</span>
+            </div>
+            <p class="error" id="erro-abdomen" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="quadril">Quadril (cm) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="quadril" name="quadril" inputmode="decimal" autocomplete="off" placeholder="Ex.: 110" required aria-describedby="erro-quadril">
+              <span class="unit" aria-hidden="true">cm</span>
+            </div>
+            <p class="error" id="erro-quadril" role="alert"></p>
+          </div>
+        </div>
+      </fieldset>
+
+      <fieldset class="section">
+        <legend><span class="step">3</span> Bioimpedância</legend>
+        <p class="hint">Informe os valores exatamente como apresentados pela sua balança ou exame de bioimpedância.</p>
+        <div class="grid-2">
+          <div class="field">
+            <label for="gordura">Gordura corporal (%) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="gordura" name="gordura" inputmode="decimal" autocomplete="off" placeholder="Ex.: 36,6" required aria-describedby="erro-gordura">
+              <span class="unit" aria-hidden="true">%</span>
+            </div>
+            <p class="error" id="erro-gordura" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="visceral">Gordura visceral <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="visceral" name="visceral" inputmode="numeric" autocomplete="off" placeholder="Ex.: 6" required aria-describedby="erro-visceral">
+              <span class="unit" aria-hidden="true">nível</span>
+            </div>
+            <p class="error" id="erro-visceral" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="idadeCorporal">Idade corporal (anos) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="idadeCorporal" name="idadeCorporal" inputmode="numeric" autocomplete="off" placeholder="Ex.: 37" required aria-describedby="erro-idadeCorporal">
+              <span class="unit" aria-hidden="true">anos</span>
+            </div>
+            <p class="error" id="erro-idadeCorporal" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="musculo">Músculo esquelético (%) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="musculo" name="musculo" inputmode="decimal" autocomplete="off" placeholder="Ex.: 28,6" required aria-describedby="erro-musculo">
+              <span class="unit" aria-hidden="true">%</span>
+            </div>
+            <p class="error" id="erro-musculo" role="alert"></p>
+          </div>
+          <div class="field">
+            <label for="metabolismo">Metabolismo basal (kcal) <span class="req" aria-hidden="true">*</span></label>
+            <div class="input-unit">
+              <input type="text" id="metabolismo" name="metabolismo" inputmode="numeric" autocomplete="off" placeholder="Ex.: 1758" required aria-describedby="erro-metabolismo">
+              <span class="unit" aria-hidden="true">kcal</span>
+            </div>
+            <p class="error" id="erro-metabolismo" role="alert"></p>
+          </div>
+          <div class="actions actions-inline">
+            <button type="submit" class="btn btn-primary">Calcular avaliação</button>
+            <a href="avaliacoes.html" class="btn btn-secondary">Ver todas as avaliações</a>
+          </div>
+        </div>
+      </fieldset>
+    </form>
+
+    <section id="resultado" class="report" aria-labelledby="titulo-resultado" aria-live="polite" hidden>
+      <div class="section-head">
+        <h2 id="titulo-resultado">Resultado da avaliação</h2>
+        <p class="report-date" id="resultado-data"></p>
+      </div>
+
+      <div class="cards" id="cards-resultado"></div>
+
+      <div class="card">
+        <h3>Medidas corporais</h3>
+        <dl class="measures" id="lista-medidas"></dl>
+      </div>
+
+      <div class="actions actions-save">
+        <button type="button" id="btn-salvar" class="btn btn-secondary">Salvar avaliação</button>
+        <p class="status" id="status-salvar" role="status"></p>
+      </div>
+
+      <p class="disclaimer">Este relatório é destinado ao acompanhamento pessoal e não substitui avaliação médica ou nutricional. Os resultados de bioimpedância podem variar conforme aparelho, hidratação, horário e condições da medição.</p>
+    </section>
+
+    <section id="historico" class="card" aria-labelledby="titulo-historico" hidden>
+      <h2 id="titulo-historico">Histórico de avaliações</h2>
+      <div class="table-wrap" tabindex="0" role="region" aria-label="Tabela do histórico de avaliações (role horizontalmente se necessário)">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Data</th>
+              <th scope="col">Peso</th>
+              <th scope="col">IMC</th>
+              <th scope="col">Gordura corporal</th>
+              <th scope="col">Gordura visceral</th>
+              <th scope="col">Músculo esquelético</th>
+              <th scope="col">Cintura</th>
+              <th scope="col"><span class="sr-only">Ações</span></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-historico"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="evolucao" aria-labelledby="titulo-evolucao" hidden>
+      <h2 id="titulo-evolucao">Minha evolução</h2>
+
+      <div class="card" id="comparacao">
+        <h3>Desde a primeira avaliação</h3>
+        <div class="comparison" id="lista-comparacao"></div>
+      </div>
+
+      <div class="charts" id="graficos"></div>
+    </section>
+  </main>
+
+  <footer class="page-footer">
+    <p>Seus dados ficam salvos de forma privada na sua conta.</p>
+  </footer>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
