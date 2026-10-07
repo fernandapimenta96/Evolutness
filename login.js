@@ -74,7 +74,22 @@
     }
   }
 
+  // Ao voltar do link de confirmação, o Supabase anexa os dados ao "#" do endereço.
+  function avisarEmailConfirmado() {
+    const hash = window.location.hash;
+    if (/error_description=/.test(hash)) {
+      mostrarAviso('aviso-form', 'O link de confirmação é inválido ou expirou. Crie a conta novamente ou entre se já a confirmou.');
+    } else if (/type=signup|access_token=/.test(hash)) {
+      localStorage.removeItem('evolutness:sessao');
+      mostrarAviso('aviso-ok', 'E-mail confirmado! Agora é só entrar.');
+    } else {
+      return;
+    }
+    history.replaceState(null, '', window.location.pathname);
+  }
+
   async function iniciar() {
+    avisarEmailConfirmado();
     if (!Api.configurado()) {
       $('aviso-config').hidden = false;
       $('btn-enviar').disabled = true;

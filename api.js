@@ -109,7 +109,9 @@
 
   // Retorna a sessão, ou null quando o projeto exige confirmação de e-mail.
   async function cadastrar(email, senha) {
-    const resp = await requisitar('/auth/v1/signup', { metodo: 'POST', corpo: { email, password: senha } });
+    // O link do e-mail de confirmação volta para a página de login deste mesmo endereço.
+    const retorno = encodeURIComponent(new URL('login.html', window.location.href).href);
+    const resp = await requisitar(`/auth/v1/signup?redirect_to=${retorno}`, { metodo: 'POST', corpo: { email, password: senha } });
     return resp && resp.access_token ? criarSessao(resp) : null;
   }
 
