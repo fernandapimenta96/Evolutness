@@ -1,32 +1,42 @@
 # Meu Acompanhamento Corporal
 
-Página em HTML/CSS/JavaScript puro. Login e banco de dados no **Supabase** (plano gratuito).
+Registro de pesagens e medidas corporais com cálculo de IMC, relações cintura/quadril e cintura/altura, massa de gordura, histórico e gráficos de evolução.
+HTML, CSS e JavaScript puros, sem frameworks. Login e dados no **Supabase** (plano gratuito).
 
-## 1. Configurar o banco (uma vez)
+## Arquivos
 
-1. Crie uma conta em https://supabase.com e um projeto novo.
-2. Em **SQL Editor**, cole o conteúdo de `supabase.sql` e clique em **Run**.
-3. Em **Project Settings > API**, copie a *Project URL* e a chave *anon / publishable*.
-4. Cole os dois valores em `config.js`. (Nunca use a chave `service_role`.)
-5. Em **Authentication > Sign In / Providers > Email**, escolha se quer exigir confirmação de e-mail. Para testar rápido, desative "Confirm email".
+| Arquivo | Função |
+|---|---|
+| `login.html` / `login.js` | Entrar e criar conta |
+| `index.html` / `script.js` | Nova avaliação e relatório |
+| `avaliacoes.html` | Histórico, evolução e comparação |
+| `api.js` | Acesso ao Supabase (`fetch`) |
+| `config.js` | URL e chave pública do projeto Supabase |
+| `supabase.sql` | Tabela `avaliacoes` e regras de segurança |
+| `style.css` | Estilos (inclui tema escuro) |
 
-## 2. Abrir no computador
+## Configuração (uma vez)
 
-O navegador bloqueia o login quando a página é aberta direto do arquivo. Use um servidor local simples:
+1. Crie um projeto em https://supabase.com.
+2. Em **SQL Editor**, execute o conteúdo de `supabase.sql`.
+3. Em **Project Settings > API**, copie a *Project URL* e a chave *anon / publishable* para `config.js`. Nunca use a chave `service_role`.
+4. Em **Authentication > Sign In / Providers > Email**, defina se exige confirmação de e-mail (desative para testar rápido).
+
+## Executar
+
+O login não funciona abrindo o arquivo direto no navegador. Use um servidor local:
 
     python3 -m http.server 8000
 
-e acesse http://localhost:8000/login.html
+e acesse http://localhost:8000/login.html. É necessário ter internet.
 
-## 3. Publicar de graça
+## Publicar
 
-Envie a pasta para **GitHub Pages**, **Cloudflare Pages** ou **Netlify** (são só arquivos estáticos).
-Depois, em Supabase > **Authentication > URL Configuration**, informe o endereço publicado em *Site URL*
-(necessário para os links de confirmação de e-mail).
+Basta hospedar a pasta como site estático (GitHub Pages, Cloudflare Pages, Netlify). Depois informe o endereço em Supabase > **Authentication > URL Configuration > Site URL**.
 
 ## Observações
 
-- Cada pessoa só enxerga as próprias avaliações (Row Level Security).
-- A página agora precisa de internet. Só o tema escuro fica salvo no navegador.
-- Avaliações antigas do `localStorage` podem ser importadas no primeiro acesso.
-- Plano gratuito do Supabase pausa projetos inativos por cerca de 7 dias; basta reativar no painel.
+- Cada pessoa vê apenas as próprias avaliações (Row Level Security).
+- O `localStorage` guarda somente a sessão, o tema e avaliações antigas para importar no primeiro acesso.
+- Projetos inativos do plano gratuito são pausados após cerca de 7 dias; reative no painel do Supabase.
+- Este relatório é para acompanhamento pessoal e não substitui avaliação médica ou nutricional.
