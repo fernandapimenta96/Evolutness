@@ -223,15 +223,41 @@
 
   const $ = (id) => document.getElementById(id);
 
-  function cartao(titulo, valorHtml, classificacao, nota) {
-    const badge = classificacao
-      ? `<span class="badge badge-${classificacao.tom}">${classificacao.rotulo}</span>`
-      : '';
-    const obs = nota ? `<p class="result-note">${nota}</p>` : '';
-    return `<article class="card result-card"><h3>${titulo}</h3><p class="result-value">${valorHtml}</p>${badge}${obs}</article>`;
+  // Criação de elementos sem innerHTML: todo texto entra por textContent (nunca é interpretado como HTML).
+  // opcoes: { classe, texto, attrs: {nome: valor}, dados: {chave: valor} }; filhos: Node ou string.
+  function el(tag, opcoes, ...filhos) {
+    return montar(document.createElement(tag), opcoes, filhos);
   }
 
-  const comUnidade = (texto, unidade) => (unidade ? `${texto} <small>${unidade}</small>` : texto);
+  function svgEl(tag, opcoes, ...filhos) {
+    return montar(document.createElementNS('http://www.w3.org/2000/svg', tag), opcoes, filhos);
+  }
+
+  function montar(no, { classe, texto, attrs, dados } = {}, filhos) {
+    if (classe) no.setAttribute('class', classe);
+    if (texto !== undefined) no.textContent = texto;
+    Object.entries(attrs || {}).forEach(([nome, valor]) => no.setAttribute(nome, String(valor)));
+    Object.entries(dados || {}).forEach(([chave, valor]) => { no.dataset[chave] = valor; });
+    no.append(...filhos);
+    return no;
+  }
+
+  // Valor com unidade pequena ao lado, ex.: 36,6 <small>%</small>.
+  function comUnidade(texto, unidade) {
+    return unidade ? [texto + ' ', el('small', { texto: unidade })] : [texto];
+  }
+
+  // valor: string ou lista de nós/strings (use comUnidade).
+  function cartao(titulo, valor, classificacao, nota) {
+    return el('article', { classe: 'card result-card' },
+      el('h3', { texto: titulo }),
+      el('p', { classe: 'result-value' }, ...[].concat(valor)),
+      ...(classificacao ? [el('span', { classe: `badge badge-${classificacao.tom}`, texto: classificacao.rotulo })] : []),
+      ...(nota ? [el('p', { classe: 'result-note', texto: nota })] : []));
+  }
+
+  // Linha de lista de definição: <div><dt>nome</dt><dd>valor</dd></div>
+  const itemMedida = (nome, valor) => el('div', {}, el('dt', { texto: nome }), el('dd', { texto: valor }));
 
   function renderizarResultado(d) {
     const ind = calcularIndicadores(d);
@@ -248,7 +274,7 @@
       cards.push(cartao('Massa de gordura', comUnidade(fmt2(ind.massaGordura), 'kg'), null, 'Valor estimado.'));
       cards.push(cartao('Massa livre de gordura', comUnidade(fmt2(ind.massaLivre), 'kg'), null, 'Valor estimado.'));
     }
-    $('cards-resultado').innerHTML = cards.join('');
+    $('cards-resultado').replaceChildren(...cards);
 
     const medidas = [
       ['Busto', `${fmtPeso(d.busto)} cm`],
@@ -258,32 +284,34 @@
       ['Relação cintura/quadril', fmt2(ind.rcq)],
       ['Relação cintura/altura', fmt2(ind.cinturaAltura)],
     ];
-    $('lista-medidas').innerHTML = medidas
-      .map(([nome, valor]) => `<div><dt>${nome}</dt><dd>${valor}</dd></div>`)
-      .join('');
+    $('lista-medidas').replaceChildren(...medidas.map(([nome, valor]) => itemMedida(nome, valor)));
 
     $('resultado-data').textContent = `Avaliação de ${formatarData(d.data)}`;
     $('resultado').hidden = false;
   }
 
+  const botaoExcluir = (a) => el('button', {
+    classe: 'btn btn-danger',
+    texto: 'Excluir',
+    attrs: { type: 'button', 'aria-label': `Excluir avaliação de ${formatarData(a.data)}` },
+    dados: { excluir: a.id },
+  });
+
   function renderizarHistorico(lista) {
     $('historico').hidden = lista.length === 0;
-    $('corpo-historico').innerHTML = [...lista]
-      .reverse()
-      .map((a) => {
-        const imc = calcularIndicadores(a).imc;
-        return `<tr>
-          <td>${formatarData(a.data)}</td>
-          <td>${fmtPeso(a.peso)} kg</td>
-          <td>${fmt2(imc)}</td>
-          <td>${fmt1(a.gordura)}%</td>
-          <td>${fmt0(a.visceral)}</td>
-          <td>${fmt1(a.musculo)}%</td>
-          <td>${fmtPeso(a.cintura)} cm</td>
-          <td><button type="button" class="btn btn-danger" data-excluir="${a.id}" aria-label="Excluir avaliação de ${formatarData(a.data)}">Excluir</button></td>
-        </tr>`;
-      })
-      .join('');
+    $('corpo-historico').replaceChildren(...[...lista].reverse().map((a) => {
+      const imc = calcularIndicadores(a).imc;
+      const celulas = [
+        formatarData(a.data),
+        `${fmtPeso(a.peso)} kg`,
+        fmt2(imc),
+        `${fmt1(a.gordura)}%`,
+        fmt0(a.visceral),
+        `${fmt1(a.musculo)}%`,
+        `${fmtPeso(a.cintura)} cm`,
+      ].map((texto) => el('td', { texto }));
+      return el('tr', {}, ...celulas, el('td', {}, botaoExcluir(a)));
+    }));
   }
 
   /* ---------- Comparação ---------- */
@@ -291,19 +319,22 @@
   function renderizarComparacao(lista) {
     const primeira = lista[0];
     const atual = lista[lista.length - 1];
-    $('lista-comparacao').innerHTML = INDICADORES.map((ind) => {
+    $('lista-comparacao').replaceChildren(...INDICADORES.map((ind) => {
       const ini = valorIndicador(primeira, ind.chave);
       const fim = valorIndicador(atual, ind.chave);
       const casasMin = ind.casas === 1 ? 0 : ind.casas;
       const f = (v) => formatarNumero(v, ind.casas, casasMin);
       const un = ind.unidade ? (ind.unidade === '%' ? '%' : ` ${ind.unidade}`) : '';
       const sufixoVar = ind.variacao ? ` ${ind.variacao}` : '';
-      return `<div class="comparison-item"><h4>${ind.titulo}</h4><ul>
-        <li><span>Inicial</span><span>${f(ini)}${un}</span></li>
-        <li><span>Atual</span><span>${f(fim)}${un}</span></li>
-        <li><span>Variação</span><span class="delta">${formatarVariacao(fim - ini, ind.casas, casasMin)}${sufixoVar}</span></li>
-      </ul></div>`;
-    }).join('');
+      const linha = (rotulo, valor, classe) =>
+        el('li', {}, el('span', { texto: rotulo }), el('span', { classe, texto: valor }));
+      return el('div', { classe: 'comparison-item' },
+        el('h4', { texto: ind.titulo }),
+        el('ul', {},
+          linha('Inicial', `${f(ini)}${un}`),
+          linha('Atual', `${f(fim)}${un}`),
+          linha('Variação', `${formatarVariacao(fim - ini, ind.casas, casasMin)}${sufixoVar}`, 'delta')));
+    }));
   }
 
   /* ---------- Gráficos em SVG puro ---------- */
@@ -323,43 +354,46 @@
     const casasEixo = ind.casas === 0 ? (max - min < 4 ? 1 : 0) : ind.casas;
     const casasMin = ind.casas === 1 ? 0 : ind.casas;
     const unidade = ind.unidade === '%' ? '%' : '';
+    const fmtValor = (v) => formatarNumero(v, ind.casas, casasMin);
+    const rotuloSvg = (classe, attrs, texto) => svgEl('text', { classe, attrs: { 'text-anchor': 'middle', ...attrs }, texto });
+
+    const partes = [];
 
     // Linhas de grade e valores do eixo vertical
-    let grade = '';
     for (let i = 0; i <= 3; i++) {
       const v = min + ((max - min) * i) / 3;
-      grade += `<line class="chart-grid" x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}"/>`
-        + `<text class="chart-label" x="${L - 8}" y="${y(v) + 4}" text-anchor="end">${formatarNumero(v, casasEixo)}</text>`;
+      partes.push(
+        svgEl('line', { classe: 'chart-grid', attrs: { x1: L, x2: W - R, y1: y(v), y2: y(v) } }),
+        rotuloSvg('chart-label', { x: L - 8, y: y(v) + 4, 'text-anchor': 'end' }, formatarNumero(v, casasEixo)));
     }
 
-    // Datas no eixo horizontal (evita sobreposição com muitos pontos)
-    const passo = Math.ceil(lista.length / 6);
-    let datas = '';
-    lista.forEach((a, i) => {
-      if (i % passo === 0 || i === lista.length - 1) {
-        datas += `<text class="chart-label" x="${x(i)}" y="${H - 12}" text-anchor="middle">${formatarDataCurta(a.data)}</text>`;
+    partes.push(
+      svgEl('line', { classe: 'chart-axis', attrs: { x1: L, x2: L, y1: T, y2: H - B } }),
+      svgEl('line', { classe: 'chart-axis', attrs: { x1: L, x2: W - R, y1: H - B, y2: H - B } }),
+      svgEl('polyline', { classe: 'chart-line', attrs: { points: valores.map((v, i) => `${x(i)},${y(v)}`).join(' ') } }));
+
+    valores.forEach((v, i) => {
+      partes.push(svgEl('circle', { classe: 'chart-dot', attrs: { cx: x(i), cy: y(v), r: 4 } },
+        svgEl('title', { texto: `${formatarData(lista[i].data)}: ${fmtValor(v)}${ind.unidade ? ' ' + ind.unidade : ''}` })));
+      if (lista.length <= 8) {
+        partes.push(rotuloSvg('chart-value', { x: x(i), y: y(v) - 10 }, `${fmtValor(v)}${unidade}`));
       }
     });
 
-    const pontos = valores.map((v, i) => `${x(i)},${y(v)}`).join(' ');
-    const marcas = valores.map((v, i) => {
-      const rotulo = lista.length <= 8
-        ? `<text class="chart-value" x="${x(i)}" y="${y(v) - 10}" text-anchor="middle">${formatarNumero(v, ind.casas, casasMin)}${unidade}</text>`
-        : '';
-      return `<circle class="chart-dot" cx="${x(i)}" cy="${y(v)}" r="4"><title>${formatarData(lista[i].data)}: ${formatarNumero(v, ind.casas, casasMin)}${ind.unidade ? ' ' + ind.unidade : ''}</title></circle>${rotulo}`;
-    }).join('');
+    // Datas no eixo horizontal (evita sobreposição com muitos pontos)
+    const passo = Math.ceil(lista.length / 6);
+    lista.forEach((a, i) => {
+      if (i % passo === 0 || i === lista.length - 1) {
+        partes.push(rotuloSvg('chart-label', { x: x(i), y: H - 12 }, formatarDataCurta(a.data)));
+      }
+    });
 
-    const resumo = `Gráfico de ${ind.titulo}: de ${formatarNumero(valores[0], ind.casas, casasMin)} em ${formatarData(lista[0].data)} para ${formatarNumero(valores[valores.length - 1], ind.casas, casasMin)} em ${formatarData(lista[lista.length - 1].data)}.`;
+    const resumo = `Gráfico de ${ind.titulo}: de ${fmtValor(valores[0])} em ${formatarData(lista[0].data)} para ${fmtValor(valores[valores.length - 1])} em ${formatarData(lista[lista.length - 1].data)}.`;
     const tituloUn = ind.unidade ? ` (${ind.unidade})` : '';
 
-    return `<article class="card chart-card"><h3>${ind.titulo}${tituloUn}</h3>
-      <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${resumo}">
-        ${grade}
-        <line class="chart-axis" x1="${L}" x2="${L}" y1="${T}" y2="${H - B}"/>
-        <line class="chart-axis" x1="${L}" x2="${W - R}" y1="${H - B}" y2="${H - B}"/>
-        <polyline class="chart-line" points="${pontos}"/>
-        ${marcas}${datas}
-      </svg></article>`;
+    return el('article', { classe: 'card chart-card' },
+      el('h3', { texto: `${ind.titulo}${tituloUn}` }),
+      svgEl('svg', { attrs: { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': resumo } }, ...partes));
   }
 
   function renderizarEvolucao(lista) {
@@ -367,12 +401,12 @@
     const mostrar = lista.length >= 2;
     $('evolucao').hidden = !mostrar;
     if (!mostrar) {
-      $('graficos').innerHTML = '';
-      $('lista-comparacao').innerHTML = '';
+      $('graficos').replaceChildren();
+      $('lista-comparacao').replaceChildren();
       return;
     }
     renderizarComparacao(lista);
-    $('graficos').innerHTML = INDICADORES.map((ind) => criarGrafico(ind, lista)).join('');
+    $('graficos').replaceChildren(...INDICADORES.map((ind) => criarGrafico(ind, lista)));
   }
 
   async function atualizarListas() {
@@ -556,14 +590,9 @@
       ['Massa de gordura', `${fmt2(ind.massaGordura)} kg`],
       ['Massa livre de gordura', `${fmt2(ind.massaLivre)} kg`],
     ];
-    const lista = itens.map(([nome, valor]) => `<div><dt>${nome}</dt><dd>${valor}</dd></div>`).join('');
-    return `<article class="card saved-card">
-      <header class="saved-head">
-        <h3>${formatarData(a.data)}</h3>
-        <button type="button" class="btn btn-danger" data-excluir="${a.id}" aria-label="Excluir avaliação de ${formatarData(a.data)}">Excluir</button>
-      </header>
-      <dl class="measures measures-compact">${lista}</dl>
-    </article>`;
+    return el('article', { classe: 'card saved-card' },
+      el('header', { classe: 'saved-head' }, el('h3', { texto: formatarData(a.data) }), botaoExcluir(a)),
+      el('dl', { classe: 'measures measures-compact' }, ...itens.map(([nome, valor]) => itemMedida(nome, valor))));
   }
 
   async function renderizarTodas() {
@@ -578,7 +607,7 @@
     $('contagem').textContent = lista.length
       ? `${lista.length} ${lista.length === 1 ? 'avaliação salva' : 'avaliações salvas'}`
       : '';
-    $('lista-avaliacoes').innerHTML = lista.map(cartaoAvaliacao).join('');
+    $('lista-avaliacoes').replaceChildren(...lista.map(cartaoAvaliacao));
   }
 
   function iniciarTodas() {

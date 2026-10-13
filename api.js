@@ -135,6 +135,11 @@
     return linha;
   }
 
+  // O banco já tipa estas colunas (uuid e date); conferir aqui evita depender só do servidor.
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  const DATA_ISO = /^\d{4}-\d{2}-\d{2}$/;
+  const linhaValida = (l) => Boolean(l) && UUID.test(String(l.id)) && DATA_ISO.test(String(l.data));
+
   function deLinha(l) {
     const a = { id: l.id, data: l.data, criadoEm: Date.parse(l.criado_em) };
     NUMERICOS.forEach((c) => { a[c] = Number(l[COLUNAS[c] || c]); });
@@ -149,7 +154,7 @@
 
   const listar = () => comSessao(async (token) => {
     const linhas = await requisitar('/rest/v1/avaliacoes?select=*&order=data.asc,criado_em.asc', { token });
-    return (linhas || []).map(deLinha);
+    return (linhas || []).filter(linhaValida).map(deLinha);
   });
 
   // Aceita uma avaliação ou uma lista (importação).
