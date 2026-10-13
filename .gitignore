@@ -1,0 +1,20 @@
+# Sistema operacional
+.DS_Store
+Thumbs.db
+
+# Editores
+.vscode/
+.idea/
+*.swp
+
+# Dependências e logs (o projeto não usa, mas evita acidentes)
+node_modules/
+*.log
+
+# Saídas de ferramentas locais
+.playwright-mcp/
+.claude/settings.local.json
+
+# Variáveis de ambiente / segredos
+.env
+.env.*
