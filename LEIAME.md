@@ -15,6 +15,8 @@ HTML, CSS e JavaScript puros, sem frameworks. Login e dados no **Supabase** (pla
 | `config.example.js` | Modelo do `config.js`, com valores de exemplo |
 | `supabase.sql` | Tabela `avaliacoes` e regras de segurança |
 | `style.css` | Estilos (inclui tema escuro) |
+| `tema-inicial.js` | Aplica o tema salvo antes de desenhar a página |
+| `assets/` | Imagens e ícones (favicon, ícone do iOS e a imagem original `icone.png`) |
 
 ## Configuração (uma vez)
 
