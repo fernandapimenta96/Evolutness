@@ -16,9 +16,13 @@
 <body>
   <header class="page-header">
     <div class="header-actions">
-      <span class="user-email" id="usuario-email"></span>
       <button type="button" class="header-btn" id="btn-tema" aria-pressed="false">Tema escuro</button>
-      <button type="button" class="header-btn" id="btn-sair">Sair</button>
+      <div class="user-menu">
+        <button type="button" class="header-btn user-email" id="usuario-email" aria-haspopup="true" aria-expanded="false" aria-controls="menu-usuario"></button>
+        <div class="user-dropdown" id="menu-usuario" hidden>
+          <button type="button" class="user-dropdown-item" id="btn-sair">Sair</button>
+        </div>
+      </div>
     </div>
     <div class="container">
       <h1>Meu Acompanhamento Corporal</h1>

@@ -637,7 +637,7 @@
     atualizar();
   }
 
-  // Páginas protegidas: exigem login e mostram o usuário e o botão "Sair".
+  // Páginas protegidas: exigem login e mostram o e-mail do usuário (com menu "Sair").
   async function iniciarSessao() {
     if (!Api.configurado()) return irParaLogin();
     let sessao;
@@ -648,7 +648,27 @@
       return null;
     }
     if (!sessao) return irParaLogin();
-    $('usuario-email').textContent = sessao.email;
+    const botaoEmail = $('usuario-email');
+    const menu = $('menu-usuario');
+    botaoEmail.textContent = sessao.email;
+    botaoEmail.title = sessao.email;
+    const alternarMenu = (abrir) => {
+      menu.hidden = !abrir;
+      botaoEmail.setAttribute('aria-expanded', String(abrir));
+    };
+    botaoEmail.addEventListener('click', (e) => {
+      e.stopPropagation();
+      alternarMenu(menu.hidden);
+    });
+    document.addEventListener('click', (e) => {
+      if (!menu.contains(e.target)) alternarMenu(false);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !menu.hidden) {
+        alternarMenu(false);
+        botaoEmail.focus();
+      }
+    });
     $('btn-sair').addEventListener('click', () => Api.sair().then(irParaLogin));
     return sessao;
   }
