@@ -7,7 +7,7 @@ HTML, CSS e JavaScript puros, sem frameworks. Login e dados no **Supabase** (pla
 
 | Arquivo | Função |
 |---|---|
-| `login.html` / `login.js` | Entrar e criar conta |
+| `login.html` / `login.js` | Entrar, criar conta e recuperar senha |
 | `index.html` / `script.js` | Nova avaliação e relatório |
 | `avaliacoes.html` | Histórico, evolução e comparação |
 | `api.js` | Acesso ao Supabase (`fetch`) |
@@ -23,7 +23,8 @@ HTML, CSS e JavaScript puros, sem frameworks. Login e dados no **Supabase** (pla
 1. Crie um projeto em https://supabase.com.
 2. Em **SQL Editor**, execute o conteúdo de `supabase.sql`.
 3. Copie `config.example.js` para `config.js` (se ainda não existir) e preencha com a *Project URL* e a chave *anon / publishable* de **Project Settings > API**. Nunca use a chave `service_role`.
-4. Em **Authentication > Sign In / Providers > Email**, defina se exige confirmação de e-mail (desative para testar rápido).
+4. Em **Authentication > URL Configuration > Redirect URLs**, adicione o endereço de `login.html` (ex.: `http://localhost:8000/login.html` e o do site publicado). Sem isso o link de recuperação de senha não volta para a página.
+5. Em **Authentication > Sign In / Providers > Email**, defina se exige confirmação de e-mail (desative para testar rápido).
 
 ## Executar
 

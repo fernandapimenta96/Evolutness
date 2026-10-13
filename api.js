@@ -28,6 +28,8 @@
     ['too many', 'Muitas tentativas. Aguarde alguns minutos e tente novamente.'],
     ['invalid email', 'Informe um e-mail válido.'],
     ['unable to validate email', 'Informe um e-mail válido.'],
+    ['different from the old', 'A nova senha deve ser diferente da atual.'],
+    ['session missing', 'O link de recuperação expirou. Solicite um novo link.'],
     ['jwt', 'Sua sessão expirou. Entre novamente.'],
   ];
 
@@ -115,6 +117,18 @@
     return resp && resp.access_token ? criarSessao(resp) : null;
   }
 
+  // Envia o e-mail com o link de recuperação, que volta para login.html.
+  // O Supabase responde igual para e-mails cadastrados ou não (não revela quem tem conta).
+  async function recuperarSenha(email) {
+    const retorno = encodeURIComponent(new URL('login.html', window.location.href).href);
+    await requisitar(`/auth/v1/recover?redirect_to=${retorno}`, { metodo: 'POST', corpo: { email } });
+  }
+
+  // Define a nova senha usando o token temporário recebido pelo link do e-mail.
+  async function redefinirSenha(token, novaSenha) {
+    await requisitar('/auth/v1/user', { metodo: 'PUT', token, corpo: { password: novaSenha } });
+  }
+
   async function sair() {
     const sessao = lerSessao();
     limparSessao();
@@ -170,5 +184,5 @@
     token,
   }));
 
-  window.EvolutnessApi = { configurado, obterSessao, entrar, cadastrar, sair, listar, inserir, excluir };
+  window.EvolutnessApi = { configurado, obterSessao, entrar, cadastrar, recuperarSenha, redefinirSenha, sair, listar, inserir, excluir };
 })();
