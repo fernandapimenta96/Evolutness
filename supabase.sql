@@ -31,3 +31,30 @@ create policy "criar proprias avaliacoes" on public.avaliacoes
 
 create policy "excluir proprias avaliacoes" on public.avaliacoes
   for delete to authenticated using (user_id = (select auth.uid()));
+
+-- ---------------------------------------------------------------------------
+-- Parte 2 — Perfil (data de nascimento), usada para escolher a faixa etária de
+-- referência da gordura corporal e do músculo esquelético.
+-- Quem já executou a parte 1 acima deve executar apenas daqui para baixo.
+-- ---------------------------------------------------------------------------
+
+create table if not exists public.perfis (
+  user_id         uuid primary key default auth.uid() references auth.users (id) on delete cascade,
+  data_nascimento date not null check (data_nascimento >= date '1900-01-01' and data_nascimento <= current_date),
+  atualizado_em   timestamptz not null default now()
+);
+
+alter table public.perfis enable row level security;
+
+drop policy if exists "ver proprio perfil" on public.perfis;
+create policy "ver proprio perfil" on public.perfis
+  for select to authenticated using (user_id = (select auth.uid()));
+
+drop policy if exists "criar proprio perfil" on public.perfis;
+create policy "criar proprio perfil" on public.perfis
+  for insert to authenticated with check (user_id = (select auth.uid()));
+
+drop policy if exists "atualizar proprio perfil" on public.perfis;
+create policy "atualizar proprio perfil" on public.perfis
+  for update to authenticated
+  using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
