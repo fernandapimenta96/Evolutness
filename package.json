@@ -1,0 +1,19 @@
+{
+  "name": "evolutness",
+  "version": "1.0.0",
+  "description": "Meu Acompanhamento Corporal: registro de pesagens e medidas (HTML, CSS e JavaScript puros).",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": "^20.19.0 || ^22.13.0 || >=24"
+  },
+  "scripts": {
+    "test": "node --test",
+    "lint": "eslint .",
+    "check": "npm run lint && npm test"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.12.0"
+  }
+}

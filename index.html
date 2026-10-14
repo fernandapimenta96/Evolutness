@@ -42,6 +42,22 @@
       <p class="status" id="migracao-status" role="status"></p>
     </section>
 
+    <form id="form-perfil" class="card" aria-labelledby="titulo-perfil" novalidate>
+      <h2 id="titulo-perfil">Seu perfil</h2>
+      <div class="grid-2">
+        <div class="field">
+          <label for="nascimento">Data de nascimento <span class="req" aria-hidden="true">*</span></label>
+          <input type="date" id="nascimento" name="nascimento" autocomplete="bday" required aria-describedby="ajuda-nascimento erro-nascimento">
+          <p class="help" id="ajuda-nascimento">Usada para escolher a faixa etária de referência (20 a 79 anos) da gordura corporal e do músculo esquelético.</p>
+          <p class="error" id="erro-nascimento" role="alert"></p>
+        </div>
+        <div class="actions actions-inline">
+          <button type="submit" id="btn-salvar-perfil" class="btn btn-secondary">Salvar data de nascimento</button>
+        </div>
+      </div>
+      <p class="status" id="status-perfil" role="status"></p>
+    </form>
+
     <form id="form-avaliacao" class="card form-card" novalidate>
       <p class="required-note"><span class="req" aria-hidden="true">*</span> Campos obrigatórios</p>
 

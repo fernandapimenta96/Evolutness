@@ -18,27 +18,65 @@
       { ate: 30, rotulo: 'Sobrepeso', tom: 'warn' },
       { ate: Infinity, rotulo: 'Obesidade', tom: 'bad' },
     ],
-    // Referência: mulher de 20 a 39 anos
-    gordura: [
-      { ate: 21, rotulo: 'Baixo', tom: 'low' },
-      { ate: 33, rotulo: 'Normal', tom: 'ok' },
-      { ate: 39, rotulo: 'Alto', tom: 'warn' },
-      { ate: Infinity, rotulo: 'Muito alto', tom: 'bad' },
-    ],
+    // Referência: mulher, por faixa etária (veja FAIXAS_ETARIAS)
+    gordura: {
+      '20-39': [
+        { ate: 21, rotulo: 'Baixo', tom: 'low' },
+        { ate: 33, rotulo: 'Normal', tom: 'ok' },
+        { ate: 39, rotulo: 'Alto', tom: 'warn' },
+        { ate: Infinity, rotulo: 'Muito alto', tom: 'bad' },
+      ],
+      '40-59': [
+        { ate: 23, rotulo: 'Baixo', tom: 'low' },
+        { ate: 34, rotulo: 'Normal', tom: 'ok' },
+        { ate: 40, rotulo: 'Alto', tom: 'warn' },
+        { ate: Infinity, rotulo: 'Muito alto', tom: 'bad' },
+      ],
+      '60-79': [
+        { ate: 24, rotulo: 'Baixo', tom: 'low' },
+        { ate: 36, rotulo: 'Normal', tom: 'ok' },
+        { ate: 42, rotulo: 'Alto', tom: 'warn' },
+        { ate: Infinity, rotulo: 'Muito alto', tom: 'bad' },
+      ],
+    },
     // Escala do aparelho (valores inteiros): até 9 normal, 10–14 alto, 15+ muito alto
     visceral: [
       { ate: 10, rotulo: 'Normal', tom: 'ok' },
       { ate: 15, rotulo: 'Alto', tom: 'warn' },
       { ate: Infinity, rotulo: 'Muito alto', tom: 'bad' },
     ],
-    // Referência: mulher de 20 a 39 anos
-    musculo: [
-      { ate: 24.3, rotulo: 'Baixo', tom: 'low' },
-      { ate: 30.4, rotulo: 'Normal', tom: 'ok' },
-      { ate: 35.4, rotulo: 'Alto', tom: 'ok' },
-      { ate: Infinity, rotulo: 'Muito alto', tom: 'ok' },
-    ],
+    // Referência: mulher, por faixa etária (veja FAIXAS_ETARIAS)
+    musculo: {
+      '20-39': [
+        { ate: 24.3, rotulo: 'Baixo', tom: 'low' },
+        { ate: 30.4, rotulo: 'Normal', tom: 'ok' },
+        { ate: 35.4, rotulo: 'Alto', tom: 'ok' },
+        { ate: Infinity, rotulo: 'Muito alto', tom: 'ok' },
+      ],
+      '40-59': [
+        { ate: 24.1, rotulo: 'Baixo', tom: 'low' },
+        { ate: 30.2, rotulo: 'Normal', tom: 'ok' },
+        { ate: 35.2, rotulo: 'Alto', tom: 'ok' },
+        { ate: Infinity, rotulo: 'Muito alto', tom: 'ok' },
+      ],
+      '60-79': [
+        { ate: 23.9, rotulo: 'Baixo', tom: 'low' },
+        { ate: 30, rotulo: 'Normal', tom: 'ok' },
+        { ate: 35, rotulo: 'Alto', tom: 'ok' },
+        { ate: Infinity, rotulo: 'Muito alto', tom: 'ok' },
+      ],
+    },
   };
+
+  // Faixas etárias com referência de gordura corporal e músculo esquelético (idade em anos completos).
+  const FAIXAS_ETARIAS = [
+    { chave: '20-39', de: 20, ate: 39 },
+    { chave: '40-59', de: 40, ate: 59 },
+    { chave: '60-79', de: 60, ate: 79 },
+  ];
+
+  // Mostrado quando não há data de nascimento ou a idade está fora das faixas acima.
+  const SEM_REFERENCIA = { rotulo: 'Sem referência', tom: 'neutral' };
 
   // Campos do formulário e regras de validação.
   // tipo: 'data' | 'numero'; min/max: limites; minExclusivo: true => valor > min.
@@ -120,14 +158,35 @@
     return Number(t.replace(',', '.'));
   }
 
+  // Confere o formato AAAA-MM-DD e se o dia existe no calendário (new Date aceitaria 30/02 e rolaria para março).
+  function dataExiste(iso) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) return false;
+    const data = new Date(iso);
+    return !isNaN(data) && data.toISOString().slice(0, 10) === iso;
+  }
+
+  // Data local de hoje em AAAA-MM-DD.
+  function hojeISO() {
+    const d = new Date();
+    const dois = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`;
+  }
+
+  // Valida a data de nascimento do perfil: data real, a partir de 1900 e não futura.
+  function validarNascimento(texto, hoje = hojeISO()) {
+    const valor = String(texto).trim();
+    if (!valor) return { erro: 'Informe sua data de nascimento.' };
+    if (!dataExiste(valor) || valor < '1900-01-01') return { erro: 'Informe uma data de nascimento válida.' };
+    if (valor > hoje) return { erro: 'A data de nascimento não pode ser no futuro.' };
+    return { valor };
+  }
+
   function validarCampo(campo, texto) {
     const valor = String(texto).trim();
     if (!valor) return { erro: `Preencha o campo ${campo.rotulo.toLowerCase()}.` };
 
     if (campo.tipo === 'data') {
-      return /^\d{4}-\d{2}-\d{2}$/.test(valor) && !isNaN(new Date(valor))
-        ? { valor }
-        : { erro: 'Informe uma data válida.' };
+      return dataExiste(valor) ? { valor } : { erro: 'Informe uma data válida.' };
     }
 
     const numero = lerNumero(valor);
@@ -165,6 +224,27 @@
     return faixas.find((f) => valor < f.ate);
   }
 
+  // Idade em anos completos na data da avaliação (datas AAAA-MM-DD). null se faltar alguma data.
+  function calcularIdade(nascimento, dataAvaliacao) {
+    if (!dataExiste(nascimento || '') || !dataExiste(dataAvaliacao || '')) return null;
+    const [an, mn, dn] = nascimento.split('-').map(Number);
+    const [aa, ma, da] = dataAvaliacao.split('-').map(Number);
+    const fezAniversario = ma > mn || (ma === mn && da >= dn);
+    return aa - an - (fezAniversario ? 0 : 1);
+  }
+
+  // Classifica gordura corporal ou músculo esquelético pela faixa etária da pessoa na data da avaliação.
+  function classificarPorIdade(indicador, valor, idade) {
+    const faixaEtaria = Number.isInteger(idade) && FAIXAS_ETARIAS.find((f) => idade >= f.de && idade <= f.ate);
+    return faixaEtaria ? classificar(FAIXAS[indicador][faixaEtaria.chave], valor) : SEM_REFERENCIA;
+  }
+
+  // O IMC é classificado já arredondado a 2 casas, como é exibido (evita 24,999… aparecer como
+  // "25,00" e ser classificado como Normal por erro de ponto flutuante).
+  function classificarImc(imc) {
+    return classificar(FAIXAS.imc, Math.round(imc * 100) / 100);
+  }
+
   // Não há fórmulas próprias para gordura, visceral, idade corporal, músculo
   // e metabolismo: esses valores vêm da balança e são apenas classificados.
   function calcularIndicadores(d) {
@@ -192,6 +272,15 @@
 
   // Última lista carregada (usada, por exemplo, para citar a data na confirmação de exclusão).
   let avaliacoes = [];
+
+  // Data de nascimento do perfil (AAAA-MM-DD) ou null: define a faixa etária das referências de gordura e músculo.
+  let nascimento = null;
+  const idadeNaData = (dataAvaliacao) => calcularIdade(nascimento, dataAvaliacao);
+
+  async function carregarPerfil() {
+    const perfil = await Api.obterPerfil();
+    nascimento = perfil ? perfil.dataNascimento : null;
+  }
 
   async function carregarAvaliacoes() {
     avaliacoes = (await Api.listar()).sort(porDataEOrdem);
@@ -262,10 +351,10 @@
   function renderizarResultado(d) {
     const ind = calcularIndicadores(d);
     const cards = [
-      cartao('IMC', fmt2(ind.imc), classificar(FAIXAS.imc, ind.imc)),
-      cartao('Gordura corporal', comUnidade(fmt1(d.gordura), '%'), classificar(FAIXAS.gordura, d.gordura)),
+      cartao('IMC', fmt2(ind.imc), classificarImc(ind.imc)),
+      cartao('Gordura corporal', comUnidade(fmt1(d.gordura), '%'), classificarPorIdade('gordura', d.gordura, idadeNaData(d.data))),
       cartao('Gordura visceral', fmt0(d.visceral), classificar(FAIXAS.visceral, Math.round(d.visceral))),
-      cartao('Músculo esquelético', comUnidade(fmt1(d.musculo), '%'), classificar(FAIXAS.musculo, d.musculo)),
+      cartao('Músculo esquelético', comUnidade(fmt1(d.musculo), '%'), classificarPorIdade('musculo', d.musculo, idadeNaData(d.data))),
       cartao('Idade corporal', comUnidade(fmt0(d.idadeCorporal), 'anos'), null,
         'É uma estimativa do aparelho de bioimpedância e não corresponde necessariamente à idade biológica.'),
       cartao('Metabolismo basal', comUnidade(fmt0(d.metabolismo), 'kcal/dia'), null),
@@ -549,7 +638,53 @@
     });
   }
 
+  /* ---------- Perfil (data de nascimento) ---------- */
+
+  function mostrarErroNascimento(msg) {
+    $('erro-nascimento').textContent = msg || '';
+    if (msg) $('nascimento').setAttribute('aria-invalid', 'true');
+    else $('nascimento').removeAttribute('aria-invalid');
+  }
+
+  async function aoSalvarPerfil(evento) {
+    evento.preventDefault();
+    $('status-perfil').textContent = '';
+    const r = validarNascimento($('nascimento').value);
+    mostrarErroNascimento(r.erro);
+    if (r.erro) {
+      $('nascimento').focus();
+      return;
+    }
+    const botao = $('btn-salvar-perfil');
+    botao.disabled = true;
+    mostrarAviso('');
+    $('status-perfil').textContent = 'Salvando…';
+    try {
+      await Api.salvarPerfil(r.valor);
+      nascimento = r.valor;
+      $('status-perfil').textContent = 'Data de nascimento salva!';
+      if (ultimaAvaliacao) renderizarResultado(ultimaAvaliacao); // reclassifica pela nova idade
+    } catch (e) {
+      $('status-perfil').textContent = '';
+      tratarErro(e);
+    } finally {
+      botao.disabled = false;
+    }
+  }
+
+  async function iniciarPerfil() {
+    $('form-perfil').addEventListener('submit', aoSalvarPerfil);
+    $('nascimento').addEventListener('input', () => mostrarErroNascimento(''));
+    try {
+      await carregarPerfil();
+      $('nascimento').value = nascimento || '';
+    } catch (e) {
+      tratarErro(e);
+    }
+  }
+
   function iniciarFormulario(sessao) {
+    iniciarPerfil();
     $('form-avaliacao').addEventListener('submit', aoCalcular);
     $('btn-salvar').addEventListener('click', aoSalvar);
     $('corpo-historico').addEventListener('click', aoClicarHistorico);
@@ -568,10 +703,11 @@
 
   function cartaoAvaliacao(a) {
     const ind = calcularIndicadores(a);
-    const imc = classificar(FAIXAS.imc, ind.imc);
-    const gordura = classificar(FAIXAS.gordura, a.gordura);
+    const imc = classificarImc(ind.imc);
+    const idade = idadeNaData(a.data);
+    const gordura = classificarPorIdade('gordura', a.gordura, idade);
     const visceral = classificar(FAIXAS.visceral, Math.round(a.visceral));
-    const musculo = classificar(FAIXAS.musculo, a.musculo);
+    const musculo = classificarPorIdade('musculo', a.musculo, idade);
     const itens = [
       ['Peso', `${fmtPeso(a.peso)} kg`],
       ['Altura', `${fmt2(a.altura)} m`],
@@ -598,6 +734,10 @@
   async function renderizarTodas() {
     let lista;
     try {
+      await carregarPerfil();
+      if (!nascimento) {
+        mostrarAviso('Informe sua data de nascimento em “Nova avaliação” para classificar gordura corporal e músculo esquelético.');
+      }
       lista = (await carregarAvaliacoes()).slice().reverse(); // mais recentes primeiro
     } catch (e) {
       tratarErro(e);
@@ -689,6 +829,6 @@
 
   // Exposição para testes em Node (não afeta o navegador).
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { calcularIndicadores, classificar, FAIXAS, validarFormulario, EXEMPLO, lerNumero };
+    module.exports = { calcularIndicadores, classificar, classificarImc, classificarPorIdade, calcularIdade, validarNascimento, FAIXAS_ETARIAS, SEM_REFERENCIA, FAIXAS, validarFormulario, EXEMPLO, lerNumero };
   }
 })();

@@ -184,5 +184,22 @@
     token,
   }));
 
-  window.EvolutnessApi = { configurado, obterSessao, entrar, cadastrar, recuperarSenha, redefinirSenha, sair, listar, inserir, excluir };
+  /* ---------- Perfil ---------- */
+
+  // Retorna { dataNascimento: 'AAAA-MM-DD' } ou null se ainda não foi informada.
+  const obterPerfil = () => comSessao(async (token) => {
+    const linhas = await requisitar('/rest/v1/perfis?select=data_nascimento', { token });
+    const l = linhas && linhas[0];
+    return l && DATA_ISO.test(String(l.data_nascimento)) ? { dataNascimento: l.data_nascimento } : null;
+  });
+
+  // Cria ou atualiza o perfil da pessoa logada (upsert por user_id).
+  const salvarPerfil = (dataNascimento) => comSessao((token) => requisitar('/rest/v1/perfis?on_conflict=user_id', {
+    metodo: 'POST',
+    token,
+    corpo: { data_nascimento: dataNascimento },
+    cabecalhos: { Prefer: 'resolution=merge-duplicates,return=minimal' },
+  }));
+
+  window.EvolutnessApi = { configurado, obterSessao, entrar, cadastrar, recuperarSenha, redefinirSenha, sair, listar, inserir, excluir, obterPerfil, salvarPerfil };
 })();

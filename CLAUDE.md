@@ -153,6 +153,18 @@ Usar como referência para mulher de 20 a 39 anos:
 - 33% a 38,9% → alto
 - 39% ou mais → muito alto
 
+Usar como referência para mulher de 40 a 59 anos:
+- abaixo de 23% → baixo
+- 23% a 33,9% → normal
+- 34% a 39,9% → alto
+- 40% ou mais → muito alto
+
+Usar como referência para mulher de 60 a 79 anos:
+- abaixo de 24% → baixo
+- 24% a 35,9% → normal
+- 36% a 41,9% → alto
+- 42% ou mais → muito alto
+
 Card 3:
 "Gordura visceral"
 Mostrar:
@@ -175,6 +187,18 @@ Para mulher de 20 a 39 anos:
 - 24,3% a 30,3% → normal
 - 30,4% a 35,3% → alto
 - 35,4% ou mais → muito alto
+
+Para mulher de 40 a 59 anos:
+- abaixo de 24,1% → baixo
+- 24,1% a 30,1% → normal
+- 30,2% a 35,1% → alto
+- 35,2% ou mais → muito alto
+
+Para mulher de 60 a 79 anos:
+- abaixo de 23,9% → baixo
+- 23,9% a 29,9% → normal
+- 30% a 34,9% → alto
+- 35% ou mais → muito alto
 
 Card 5:
 "Idade corporal"
