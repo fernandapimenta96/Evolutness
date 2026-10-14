@@ -407,4 +407,4 @@ Priorize código limpo, organizado, legível e fácil de modificar futuramente.
 ### ATUALIZAÇÃO (substitui "sem backend / só localStorage")
 - Os dados agora ficam no Supabase (Postgres + Auth), acessado por `fetch` em `api.js`; configuração em `config.js`, esquema em `supabase.sql`.
 - Páginas: `login.html` (+ `login.js`), `index.html`, `avaliacoes.html`. Continua sem frameworks ou bibliotecas.
-- O `localStorage` guarda apenas a sessão, o tema e as avaliações antigas a importar. Veja `LEIAME.md`.
+- O `localStorage` guarda apenas a sessão, o tema e as avaliações antigas a importar. Veja `README.md`.
