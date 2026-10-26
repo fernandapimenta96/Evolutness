@@ -58,3 +58,11 @@ drop policy if exists "atualizar proprio perfil" on public.perfis;
 create policy "atualizar proprio perfil" on public.perfis
   for update to authenticated
   using (user_id = (select auth.uid())) with check (user_id = (select auth.uid()));
+
+
+-- ---------------------------------------------------------------------------
+-- Parte 3 — Perfil: nome e sexo. Os cálculos abrangem apenas mulheres de 20 a 79 anos.
+-- ---------------------------------------------------------------------------
+
+alter table public.perfis add column if not exists nome text check (char_length(nome) between 1 and 80);
+alter table public.perfis add column if not exists sexo text check (sexo = 'feminino');

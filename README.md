@@ -13,7 +13,7 @@ HTML, CSS e JavaScript puros, sem frameworks. Login e dados no **Supabase** (pla
 | `api.js` | Acesso ao Supabase (`fetch`) |
 | `config.js` | URL e chave pública do projeto Supabase (versionado de propósito, veja abaixo) |
 | `config.example.js` | Modelo do `config.js`, com valores de exemplo |
-| `supabase.sql` | Tabelas `avaliacoes` e `perfis` (data de nascimento) e regras de segurança |
+| `supabase.sql` | Tabelas `avaliacoes` e `perfis` (nome, sexo e data de nascimento) e regras de segurança |
 | `style.css` | Estilos (inclui tema escuro) |
 | `tema-inicial.js` | Aplica o tema salvo antes de desenhar a página |
 | `test/` | Testes automatizados dos cálculos e da validação (`node:test`) |
@@ -59,6 +59,7 @@ Basta hospedar a pasta como site estático (GitHub Pages, Cloudflare Pages, Netl
 
 ## Observações
 
+- **Perfil:** o card “Seu perfil” pede nome, sexo e data de nascimento. Os cálculos abrangem apenas mulheres de 20 a 79 anos: sexo masculino ou idade fora dessa faixa gera mensagem de erro, o perfil não é salvo e “Calcular avaliação” fica bloqueado até haver um perfil válido.
 - **Faixa etária:** a classificação de gordura corporal e de músculo esquelético usa referências para mulheres de 20–39, 40–59 e 60–79 anos. A idade vem da data de nascimento do perfil (card “Seu perfil” em `index.html`) e é calculada na data de cada avaliação. Sem data de nascimento, ou fora de 20 a 79 anos, o cartão mostra “Sem referência”.
 - Cada pessoa vê apenas as próprias avaliações (Row Level Security).
 - O `localStorage` guarda somente a sessão, o tema e avaliações antigas para importar no primeiro acesso.

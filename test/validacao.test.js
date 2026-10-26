@@ -2,7 +2,7 @@
 
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { lerNumero, validarFormulario, validarNascimento, EXEMPLO } = require('../script.js');
+const { lerNumero, validarFormulario, validarNascimento, validarPerfil, EXEMPLO } = require('../script.js');
 
 const validar = (alteracoes = {}) => validarFormulario((id) => ({ ...EXEMPLO, ...alteracoes })[id]);
 const erro = (campo, valor) => validar({ [campo]: valor }).erros[campo];
@@ -107,4 +107,27 @@ test('data de nascimento: válida, vazia, inexistente, anterior a 1900 e futura'
   }
   assert.equal(validarNascimento('2026-10-15', hoje).erro, 'A data de nascimento não pode ser no futuro.');
   assert.deepEqual(validarNascimento('1900-01-01', hoje), { valor: '1900-01-01' });
+});
+
+test('validarPerfil aceita mulher de 20 a 79 anos', () => {
+  const hoje = '2026-10-26';
+  for (const nascimento of ['2006-10-26', '1947-10-27', '1986-10-06']) {
+    const r = validarPerfil({ nome: '  Ana   Souza ', sexo: 'feminino', nascimento }, hoje);
+    assert.deepEqual(r.erros, {}, nascimento);
+    assert.equal(r.valor.nome, 'Ana Souza');
+  }
+});
+
+test('validarPerfil recusa idade menor que 20 ou maior que 79 anos', () => {
+  const hoje = '2026-10-26';
+  const base = { nome: 'Ana', sexo: 'feminino' };
+  assert.match(validarPerfil({ ...base, nascimento: '2006-10-27' }, hoje).erros.nascimento, /apenas mulheres de 20 a 79 anos.*19 anos/);
+  assert.match(validarPerfil({ ...base, nascimento: '1946-10-26' }, hoje).erros.nascimento, /80 anos/);
+});
+
+test('validarPerfil recusa sexo masculino ou vazio e nome vazio', () => {
+  const r = validarPerfil({ nome: ' ', sexo: 'masculino', nascimento: '1986-10-06' }, '2026-10-26');
+  assert.equal(r.erros.nome, 'Informe seu nome.');
+  assert.match(r.erros.sexo, /apenas mulheres/);
+  assert.equal(validarPerfil({ nome: 'Ana', sexo: '', nascimento: '1986-10-06' }, '2026-10-26').erros.sexo, 'Selecione o sexo.');
 });

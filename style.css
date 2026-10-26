@@ -187,16 +187,16 @@ main { margin-top: -3rem; }
   color: var(--muted); font-size: 0.9rem; pointer-events: none;
 }
 
-input[type="text"], input[type="date"], input[type="password"] {
+input[type="text"], input[type="date"], input[type="password"], select {
   width: 100%; font: inherit; font-size: 1rem; color: var(--text);
   padding: 0.8rem 1rem; min-height: 3rem;
   background: var(--input-bg); border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   transition: border-color 0.15s, box-shadow 0.15s;
 }
 input::placeholder { color: var(--placeholder); }
-input:hover { border-color: var(--border-hover); }
-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
-input[aria-invalid="true"] { border-color: var(--danger); background: var(--danger-soft); }
+input:hover, select:hover { border-color: var(--border-hover); }
+input:focus, select:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-soft); }
+input[aria-invalid="true"], select[aria-invalid="true"] { border-color: var(--danger); background: var(--danger-soft); }
 
 .help { margin: 0.35rem 0 0; font-size: 0.85rem; color: var(--muted); }
 

@@ -186,18 +186,20 @@
 
   /* ---------- Perfil ---------- */
 
-  // Retorna { dataNascimento: 'AAAA-MM-DD' } ou null se ainda não foi informada.
+  // Retorna { nome, sexo, dataNascimento: 'AAAA-MM-DD' } ou null se o perfil ainda não foi informado.
   const obterPerfil = () => comSessao(async (token) => {
-    const linhas = await requisitar('/rest/v1/perfis?select=data_nascimento', { token });
+    const linhas = await requisitar('/rest/v1/perfis?select=nome,sexo,data_nascimento', { token });
     const l = linhas && linhas[0];
-    return l && DATA_ISO.test(String(l.data_nascimento)) ? { dataNascimento: l.data_nascimento } : null;
+    return l && DATA_ISO.test(String(l.data_nascimento))
+      ? { nome: l.nome || '', sexo: l.sexo || '', dataNascimento: l.data_nascimento }
+      : null;
   });
 
   // Cria ou atualiza o perfil da pessoa logada (upsert por user_id).
-  const salvarPerfil = (dataNascimento) => comSessao((token) => requisitar('/rest/v1/perfis?on_conflict=user_id', {
+  const salvarPerfil = ({ nome, sexo, nascimento }) => comSessao((token) => requisitar('/rest/v1/perfis?on_conflict=user_id', {
     metodo: 'POST',
     token,
-    corpo: { data_nascimento: dataNascimento },
+    corpo: { nome, sexo, data_nascimento: nascimento },
     cabecalhos: { Prefer: 'resolution=merge-duplicates,return=minimal' },
   }));
 

@@ -181,6 +181,33 @@
     return { valor };
   }
 
+  const IDADE_MINIMA = FAIXAS_ETARIAS[0].de;
+  const IDADE_MAXIMA = FAIXAS_ETARIAS[FAIXAS_ETARIAS.length - 1].ate;
+  const MSG_SO_MULHERES = 'Os cálculos e as referências deste aplicativo abrangem apenas mulheres.';
+
+  // Valida o perfil. Os cálculos só cobrem mulheres de 20 a 79 anos (idade em anos completos hoje).
+  // Retorna { erros: { nome, sexo, nascimento }, valor: { nome, sexo, nascimento } }.
+  function validarPerfil({ nome, sexo, nascimento: nasc }, hoje = hojeISO()) {
+    const erros = {};
+    const nomeLimpo = String(nome || '').trim().replace(/\s+/g, ' ');
+    if (!nomeLimpo) erros.nome = 'Informe seu nome.';
+    else if (nomeLimpo.length > 80) erros.nome = 'O nome pode ter no máximo 80 caracteres.';
+
+    if (!sexo) erros.sexo = 'Selecione o sexo.';
+    else if (sexo !== 'feminino') erros.sexo = MSG_SO_MULHERES;
+
+    const n = validarNascimento(nasc, hoje);
+    if (n.erro) {
+      erros.nascimento = n.erro;
+    } else {
+      const idade = calcularIdade(n.valor, hoje);
+      if (idade < IDADE_MINIMA || idade > IDADE_MAXIMA) {
+        erros.nascimento = `Os cálculos abrangem apenas mulheres de ${IDADE_MINIMA} a ${IDADE_MAXIMA} anos. Idade informada: ${idade} ${idade === 1 ? 'ano' : 'anos'}.`;
+      }
+    }
+    return { erros, valor: { nome: nomeLimpo, sexo, nascimento: n.valor } };
+  }
+
   function validarCampo(campo, texto) {
     const valor = String(texto).trim();
     if (!valor) return { erro: `Preencha o campo ${campo.rotulo.toLowerCase()}.` };
@@ -277,9 +304,14 @@
   let nascimento = null;
   const idadeNaData = (dataAvaliacao) => calcularIdade(nascimento, dataAvaliacao);
 
+  // Perfil salvo ({ nome, sexo, nascimento }) ou null.
+  let perfil = null;
+  const perfilElegivel = () => !!perfil && !Object.keys(validarPerfil(perfil).erros).length;
+
   async function carregarPerfil() {
-    const perfil = await Api.obterPerfil();
-    nascimento = perfil ? perfil.dataNascimento : null;
+    const dados = await Api.obterPerfil();
+    perfil = dados ? { nome: dados.nome, sexo: dados.sexo, nascimento: dados.dataNascimento } : null;
+    nascimento = perfil ? perfil.nascimento : null;
   }
 
   async function carregarAvaliacoes() {
@@ -546,6 +578,14 @@
   function aoCalcular(evento) {
     evento.preventDefault();
     $('status-salvar').textContent = '';
+    if (!perfilElegivel()) {
+      ultimaAvaliacao = null;
+      $('resultado').hidden = true;
+      mostrarAviso('Preencha e salve seu perfil (nome, sexo e data de nascimento) antes de calcular. Os cálculos abrangem apenas mulheres de 20 a 79 anos.');
+      $('form-perfil').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+    mostrarAviso('');
     const { dados, erros } = validarFormulario((id) => $(id).value);
     mostrarErros(erros);
 
@@ -640,19 +680,30 @@
 
   /* ---------- Perfil (data de nascimento) ---------- */
 
-  function mostrarErroNascimento(msg) {
-    $('erro-nascimento').textContent = msg || '';
-    if (msg) $('nascimento').setAttribute('aria-invalid', 'true');
-    else $('nascimento').removeAttribute('aria-invalid');
+  const CAMPOS_PERFIL = ['nome', 'sexo', 'nascimento'];
+
+  function mostrarErrosPerfil(erros) {
+    CAMPOS_PERFIL.forEach((id) => {
+      $('erro-' + id).textContent = erros[id] || '';
+      if (erros[id]) $(id).setAttribute('aria-invalid', 'true');
+      else $(id).removeAttribute('aria-invalid');
+    });
+  }
+
+  function limparErroPerfil(id) {
+    if (!CAMPOS_PERFIL.includes(id)) return;
+    $('erro-' + id).textContent = '';
+    $(id).removeAttribute('aria-invalid');
   }
 
   async function aoSalvarPerfil(evento) {
     evento.preventDefault();
     $('status-perfil').textContent = '';
-    const r = validarNascimento($('nascimento').value);
-    mostrarErroNascimento(r.erro);
-    if (r.erro) {
-      $('nascimento').focus();
+    const { erros, valor } = validarPerfil({ nome: $('nome').value, sexo: $('sexo').value, nascimento: $('nascimento').value });
+    mostrarErrosPerfil(erros);
+    const primeiroErro = CAMPOS_PERFIL.find((id) => erros[id]);
+    if (primeiroErro) {
+      $(primeiroErro).focus();
       return;
     }
     const botao = $('btn-salvar-perfil');
@@ -660,9 +711,10 @@
     mostrarAviso('');
     $('status-perfil').textContent = 'Salvando…';
     try {
-      await Api.salvarPerfil(r.valor);
-      nascimento = r.valor;
-      $('status-perfil').textContent = 'Data de nascimento salva!';
+      await Api.salvarPerfil(valor);
+      perfil = valor;
+      nascimento = valor.nascimento;
+      $('status-perfil').textContent = 'Perfil salvo!';
       if (ultimaAvaliacao) renderizarResultado(ultimaAvaliacao); // reclassifica pela nova idade
     } catch (e) {
       $('status-perfil').textContent = '';
@@ -674,9 +726,11 @@
 
   async function iniciarPerfil() {
     $('form-perfil').addEventListener('submit', aoSalvarPerfil);
-    $('nascimento').addEventListener('input', () => mostrarErroNascimento(''));
+    $('form-perfil').addEventListener('input', (e) => limparErroPerfil(e.target.id));
     try {
       await carregarPerfil();
+      $('nome').value = (perfil && perfil.nome) || '';
+      $('sexo').value = (perfil && perfil.sexo) || '';
       $('nascimento').value = nascimento || '';
     } catch (e) {
       tratarErro(e);
@@ -735,8 +789,8 @@
     let lista;
     try {
       await carregarPerfil();
-      if (!nascimento) {
-        mostrarAviso('Informe sua data de nascimento em “Nova avaliação” para classificar gordura corporal e músculo esquelético.');
+      if (!perfilElegivel()) {
+        mostrarAviso('Preencha seu perfil (nome, sexo e data de nascimento) em “Nova avaliação” para classificar gordura corporal e músculo esquelético.');
       }
       lista = (await carregarAvaliacoes()).slice().reverse(); // mais recentes primeiro
     } catch (e) {
@@ -829,6 +883,6 @@
 
   // Exposição para testes em Node (não afeta o navegador).
   if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { calcularIndicadores, classificar, classificarImc, classificarPorIdade, calcularIdade, validarNascimento, FAIXAS_ETARIAS, SEM_REFERENCIA, FAIXAS, validarFormulario, EXEMPLO, lerNumero };
+    module.exports = { calcularIndicadores, classificar, classificarImc, classificarPorIdade, calcularIdade, validarNascimento, validarPerfil, FAIXAS_ETARIAS, SEM_REFERENCIA, FAIXAS, validarFormulario, EXEMPLO, lerNumero };
   }
 })();

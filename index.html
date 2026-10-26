@@ -44,7 +44,22 @@
 
     <form id="form-perfil" class="card" aria-labelledby="titulo-perfil" novalidate>
       <h2 id="titulo-perfil">Seu perfil</h2>
+      <p class="hint">Os cálculos e as referências deste aplicativo abrangem apenas mulheres de 20 a 79 anos.</p>
       <div class="grid-2">
+        <div class="field">
+          <label for="nome">Nome <span class="req" aria-hidden="true">*</span></label>
+          <input type="text" id="nome" name="nome" autocomplete="name" maxlength="80" required aria-describedby="erro-nome">
+          <p class="error" id="erro-nome" role="alert"></p>
+        </div>
+        <div class="field">
+          <label for="sexo">Sexo <span class="req" aria-hidden="true">*</span></label>
+          <select id="sexo" name="sexo" required aria-describedby="erro-sexo">
+            <option value="">Selecione</option>
+            <option value="feminino">Feminino</option>
+            <option value="masculino">Masculino</option>
+          </select>
+          <p class="error" id="erro-sexo" role="alert"></p>
+        </div>
         <div class="field">
           <label for="nascimento">Data de nascimento <span class="req" aria-hidden="true">*</span></label>
           <input type="date" id="nascimento" name="nascimento" autocomplete="bday" required aria-describedby="ajuda-nascimento erro-nascimento">
@@ -52,7 +67,7 @@
           <p class="error" id="erro-nascimento" role="alert"></p>
         </div>
         <div class="actions actions-inline">
-          <button type="submit" id="btn-salvar-perfil" class="btn btn-secondary">Salvar data de nascimento</button>
+          <button type="submit" id="btn-salvar-perfil" class="btn btn-secondary">Salvar perfil</button>
         </div>
       </div>
       <p class="status" id="status-perfil" role="status"></p>
